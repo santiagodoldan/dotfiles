@@ -1,0 +1,6 @@
+[user]
+	email = santiagodolte@gmail.com
+	name = Santiago Doldan
+[core]
+	excludesfile = ~/.gitignore_global
+	editor = nvim
