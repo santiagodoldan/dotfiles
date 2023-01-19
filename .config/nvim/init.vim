@@ -1,21 +1,64 @@
 set hidden
 set nocompatible
 set selection=inclusive
+set background=light
+set mouse=a
+set encoding=UTF-8
+set guifont=Hack\ Nerd\ Font:h12
 
 set splitbelow " Open new splits always below
 set splitright " Open new splits always in the right side
+
+" Give more space for displaying messages.
+set cmdheight=2
+
+" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
+" delays and poor user experience.
+set updatetime=300
 
 syntax on             " Enable syntax highlighting
 filetype on           " Enable filetype detection
 filetype indent on    " Enable filetype-specific indenting
 filetype plugin on    " Enable filetype-specific plugins
 
+function! InitializeCoc()
+  call coc#util#install()
+  call coc#util#install_extensions([
+  \ 'coc-ultisnips',
+  \ 'coc-json',
+  \ 'coc-tsserver',
+  \ 'coc-html',
+  \ 'coc-css',
+  \ 'coc-yaml',
+  \ 'coc-highlight',
+  \ 'coc-angular'
+  \ ])
+  call coc#config('coc.preferences', {
+  \ 'diagnostic.displayByAle': 1,
+  \ 'diagnostic.triggerSignatureHelp': 0,
+  \ })
+endfunction
+
+let g:ale_disable_lsp = 1
+
 call plug#begin('~/.config/nvim/plugged')
 
 " Color scheme
-Plug 'nanotech/jellybeans.vim'
+Plug 'sonph/onehalf', {'rtp': 'vim/'}
+
+" Confirm before closing VIM session
+Plug 'vim-scripts/confirm-quit'
+
+" Vim plugin that displays tags in a window, ordered by scope
+Plug 'majutsushi/tagbar'
 
 Plug 'fntlnz/atags.vim'
+
+" Run your tests at the speed of thought
+Plug 'janko-m/vim-test'
+
+" A Vim plugin which shows a git diff in the gutter (sign column) and stages/undoes hunks.
+Plug 'airblade/vim-gitgutter'
 
 " Git wrapper
 Plug 'tpope/vim-fugitive'
@@ -29,9 +72,6 @@ Plug 'terryma/vim-expand-region'
 " Multiple cursors
 Plug 'terryma/vim-multiple-cursors'
 
-" Adds CoffeScript support
-Plug 'kchmck/vim-coffee-script'
-
 " Adds slim support
 Plug 'slim-template/vim-slim'
 
@@ -43,7 +83,7 @@ Plug 'tpope/vim-bundler'
 Plug 'vim-ruby/vim-ruby'
 
 " Bottom status/tabline
- Plug 'itchyny/lightline.vim'
+Plug 'itchyny/lightline.vim'
 
 " Move lines up/down with a shortcut
 Plug 'matze/vim-move'
@@ -54,17 +94,17 @@ Plug 'yssl/QFEnter'
 " NERDTree
 Plug 'scrooloose/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
-
-" Auto complete
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'Shougo/deoplete-rct'
-Plug 'ternjs/tern_for_vim', { 'do': 'npm install' }
-
-" Typescript support for vim
-Plug 'mhartington/nvim-typescript'
+" Vim plugin that adds icons for nerdtree. Install https://github.com/ryanoasis/nerd-fonts and choose 'Hack Nerd Font'
+Plug 'ryanoasis/vim-devicons'
 
 " Typescript syntax highlighting
 Plug 'leafgarland/typescript-vim'
+
+" Auto complete
+Plug 'neoclide/coc.nvim', { 'branch': 'release' }
+
+" Save automatically
+Plug 'vim-scripts/vim-auto-save'
 
 " Comment a line or a block easily
 Plug 'scrooloose/nerdcommenter'
@@ -86,9 +126,6 @@ Plug 'ntpeters/vim-better-whitespace'
 " Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
 Plug 'junegunn/vim-easy-align'
 
-" Asynchronous Lint Engine
-Plug 'w0rp/ale'
-
 " Add plugins to &runtimepath
 call plug#end()
 
@@ -102,7 +139,11 @@ let g:CtrlSpaceSearchTiming = 500
 
 let g:move_key_modifier = 'C'
 
+" Sessions storage directory
+let g:workspace_session_directory = '/Users/santiagodoldan/.config/nvim/sessions/'
+
 let g:ctrlsf_position = 'bottom'
+let g:ctrlsf_ignore_dir = ['log', 'tmp']
 let g:ctrlsf_auto_close = 0
 let g:ctrlsf_mapping = {
   \ 'prev': '<C-K>',
@@ -119,15 +160,28 @@ let g:ctrlsf_mapping = {
   \ 'loclist': '',
   \ 'popen': '' }
 
-let $ZF_DEFAULT_COMMAND = 'ag --hidden --ignore tmp/ --ignore .git/ -g ""'
+let g:auto_save = 1  " enable AutoSave on Vim startup
+let g:auto_save_in_insert_mode = 0  " do not save while in insert mode
+let g:auto_save_silent = 1  " do not display the auto-save notification
 
-color jellybeans
+set termguicolors
+
+let ayucolor="light"
+
+" colorscheme ayu
+" colorscheme jellybeans
+colorscheme onehalfdark
 
 " Bottom status bar scheme
-let g:lightline = { 'colorscheme': 'jellybeans', 'component_function': { 'filename': 'LightLineFilename' } }
+let g:lightline = {
+      \ 'colorscheme': 'one',
+      \ 'active': {
+      \   'left': [ [ 'mode', 'paste' ], [ 'readonly', 'relativepath', 'modified' ] ]
+      \ }
+      \ }
 
 function! LightLineFilename()
-  return expand('%')
+  return expand('%:p:h')
 endfunction
 
 " Cursor styling (:help guicursor)
@@ -165,12 +219,20 @@ set completeopt-=preview " Do not show preview code nvim-typescript
 set omnifunc=syntaxcomplete#Complete
 set grepprg=ag\ --nogroup\ --nocolor
 
+" Set terminal tab name
+let &titlestring = ':: ' . expand('%:p:h:t') . ' ::'
+
+set title
+
 " NERDTree
 let NERDTreeQuitOnOpen = 1
-let NERDTreeShowHidden = 1
+let NERDTreeShowHidden = 0
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
 let NERDTreeAutoDeleteBuffer = 1
+let NERDTreeIgnore = []
+let NERDTreeStatusline = ''
+let NERDSpaceDelims=1
 " To let reverse vim search with ?
 let NERDTreeMapHelp='<f1>'
 
@@ -185,23 +247,25 @@ autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
-" vim-multiple-cursors
-
 " Default highlighting (see help :highlight and help :highlight-link)
 highlight multiple_cursors_cursor term=reverse cterm=reverse gui=reverse
 highlight link multiple_cursors_visual Visual
 
 " Other plugins need to be disabled to avoid conflicts while using the
-"   multiple cursos plugin
+   "multiple cursor plugin
 function! Multiple_cursors_before()
   PasteEasyDisable
-  let g:deoplete#disable_auto_complete = 1
+  CocDisable
 endfunction
 
 function! Multiple_cursors_after()
   PasteEasyEnable
-  let g:deoplete#disable_auto_complete = 0
+  CocEnable
 endfunction
+
+nmap <silent> <Leader>n <Plug>(VM-Find-Under)
+nmap <silent> <Leader>j <Plug>(VM-Add-Cursor-Down)
+nmap <silent> <Leader>k <Plug>(VM-Add-Cursor-Up)
 
 map <Space> <Nop>
 noremap <CR> <Nop>
@@ -209,6 +273,29 @@ noremap <CR> <Nop>
 " Menu
 map ff :NERDTreeFind<CR>
 map mt :NERDTreeToggle<CR>
+
+" coc.nvim configs
+
+" Use tab for trigger completion with characters ahead and navigate.
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config.
+inoremap <expr><TAB>
+      \ coc#pum#visible() ? coc#pum#next(1):
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice.
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Go to definition
+map <Leader>g :call CocAction('jumpDefinition', 'vsplit')<CR>
 
 " EasyAlign
 nmap ga <Plug>(EasyAlign)
@@ -248,6 +335,8 @@ map <S-TAB> <<Right>
 vmap <TAB> >gv
 vmap <S-TAB> <gv
 map <Leader>t :tabnew<CR>
+map tt :tabnew<CR>
+map ta :tabonly<CR>
 
 map >> :execute "tabmove" tabpagenr() +1<CR>
 map << :execute "tabmove" tabpagenr() -2<CR>
@@ -265,7 +354,6 @@ noremap 66 6gt
 noremap 77 7gt
 noremap 88 8gt
 noremap 99 9gt
-noremap 00 :tablast<cr>
 
 " Comment selected or current line
 map <Leader>/ <Leader>c<Leader>i<ESC>
@@ -276,9 +364,10 @@ map \ :nohlsearch<CR>
 " Close file
 map <Leader>q <S-z><S-z>
 map qq <S-z><S-z>
+map <S-q> :qa!<CR>
 
 " Duplicate current line
-map <Leader>d YP<ESC>
+map <Leader>d yyP<ESC>
 
 " Remove current line
 map <Leader>x dd<ESC>
@@ -290,8 +379,8 @@ map <Leader>a :%y+<CR>
 map <Leader>R :e!<CR>
 
 " Replace
-map <Leader>r :s///g
-vnoremap <Leader>r y:s/<C-R>"//g<Left><Left>
+map <Leader>r :%s///gc
+vnoremap <Leader>r y:%s/<C-R>"//gc<Left><Left><Left>
 
 " Add quotes to a selected word or phrase
 vmap ' S'
@@ -312,20 +401,9 @@ let g:fzf_action = {
   \ 'ctrl-i': 'split',
   \ 'ctrl-s': 'vsplit' }
 
-let $FZF_DEFAULT_COMMAND = 'ag --skip-vcs-ignores --hidden --ignore .git --ignore tmp --ignore coverage -g ""'
+let $FZF_DEFAULT_COMMAND = 'ag --hidden --path-to-ignore /Users/santiagodoldan/.ignore -g ""'
 
-" Deoplete.
-
-let g:deoplete#enable_at_startup = 1
-let g:deoplete#enable_debug = 1
-let g:deoplete#enable_profile = 1
-
-if !exists('g:deoplete#omni#input_patterns')
-  let g:deoplete#omni#input_patterns = {}
-endif
-
-" let g:deoplete#disable_auto_complete = 1
-autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
+autocmd BufWritePost *.scala silent :EnTypeCheck
 
 " omnifuncs
 augroup omnifuncs
@@ -336,6 +414,7 @@ augroup omnifuncs
   autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
   autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
   autocmd FileType ruby,eruby setlocal omnifunc=rubycomplete#Complete
+  autocmd FileType java setlocal omnifunc=javacomplete#Complete
 augroup end
 
 " tern
@@ -345,9 +424,6 @@ if exists('g:plugs["tern_for_vim"]')
 
   autocmd FileType javascript setlocal omnifunc=tern#Complete
 endif
-
-" deoplete tab-complete
-inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
 
 " tern
 autocmd FileType javascript nnoremap <silent> <buffer> gb :TernDef<CR>
@@ -360,11 +436,40 @@ autocmd FileType ruby,eruby let g:rubycomplete_buffer_loading = 1
 autocmd FileType ruby,eruby let g:rubycomplete_classes_in_global = 1
 autocmd FileType ruby,eruby let g:rubycomplete_rails = 1
 
+" Coc
+augroup vimrc_coc
+  autocmd!
+  autocmd VimEnter * call s:setup_coc()
+augroup END
+
+function s:setup_coc() abort
+  call coc#config('coc.preferences', {
+        \ 'diagnostic.displayByAle': 1,
+        \ 'diagnostic.triggerSignatureHelp': 0,
+        \ })
+endfunction
+
 " ALE
-" Use standard if there is no .eslintrc file
-if empty(findfile('.eslintrc', '.;'))
-  let g:ale_linters = { 'javascript': ['flow', 'jscs', 'jshint', 'standard', 'xo'], 'typescript': ['tslint', 'tsserver', 'typecheck'] }
-endif
+let g:ale_linters = {
+\   'python': ['flake8', 'pylint'],
+\   'javascript': ['eslint'],
+\   'vue': ['eslint']
+\}
+
+let g:ale_fixers = {
+  \    'javascript': ['eslint'],
+  \    'typescript': ['prettier', 'tslint'],
+  \    'vue': ['eslint'],
+  \    'scss': ['prettier'],
+  \    'html': ['prettier'],
+  \    'reason': ['refmt']
+\}
+
+" File type detection
+autocmd BufNewFile,BufRead *.es6 set filetype=javascript
+autocmd BufNewFile,BufRead *.tsx set filetype=typescript
+autocmd BufNewFile,BufRead *.jst.ejs.* set filetype=html
+autocmd FileType *.js* set noballooneval
 
 " QFEnter (mimics the same keys to open errors in new windows or panes)
 let g:qfenter_keymap = {}
@@ -372,3 +477,5 @@ let g:qfenter_keymap.open = ['<CR>']
 let g:qfenter_keymap.vopen = ['s']
 let g:qfenter_keymap.hopen = ['i']
 let g:qfenter_keymap.topen = ['t']
+
+let g:NERDTreeWinPos = "left"
